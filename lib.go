@@ -48,22 +48,15 @@ type Event interface {
 	Data() interface{}
 }
 
-type Pluginable interface {
-	// Tag 返回标识实现对象的标签
-	Tag() string
-}
-
 type DeliverFunc func(event Event) error
 
 // Input 事件输入源
 type Input interface {
-	Pluginable
 	OnRead(ctx context.Context, deliverer DeliverFunc) error
 }
 
 // Output 事件输出源
 type Output interface {
-	Pluginable
 	OnSend(ctx context.Context, events ...Event)
 }
 
@@ -72,12 +65,10 @@ type FilterFunc func(ctx context.Context, event Event) error
 
 // Filter 原始Event过滤接口
 type Filter interface {
-	Pluginable
 	DoFilter(next FilterFunc) FilterFunc
 }
 
 // Transformer 处理Event格式转换
 type Transformer interface {
-	Pluginable
 	DoTransform(ctx context.Context, in []Event) (out []Event, err error)
 }

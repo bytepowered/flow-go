@@ -22,14 +22,17 @@ func NewPipeline(id string, input Input) *Pipeline {
 	}
 }
 
-func (p *Pipeline) AddFilter(f Filter) {
-	p.filters = append(p.filters, f)
+func (p *Pipeline) AddFilter(v Filter) {
+	assert.MustNotNil(v, "Filter is nil")
+	p.filters = append(p.filters, v)
 }
 
-func (p *Pipeline) AddTransformer(t Transformer) {
-	p.transformers = append(p.transformers, t)
+func (p *Pipeline) AddTransformer(v Transformer) {
+	assert.MustNotNil(v, "Transformer is nil")
+	p.transformers = append(p.transformers, v)
 }
 
-func (p *Pipeline) AddOutput(d Output) {
-	p.outputs = append(p.outputs, d)
+func (p *Pipeline) AddOutput(v Output) {
+	assert.MustNotNil(v, "Output is nil")
+	p.outputs = append(p.outputs, v)
 }
