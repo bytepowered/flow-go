@@ -1,6 +1,10 @@
 package flow
 
-import "github.com/bytepowered/assert-go"
+import (
+	"context"
+	"fmt"
+	"github.com/bytepowered/assert-go"
+)
 
 type Pipeline struct {
 	Id           string
@@ -35,4 +39,49 @@ func (p *Pipeline) AddTransformer(v Transformer) {
 func (p *Pipeline) AddOutput(v Output) {
 	assert.MustNotNil(v, "Output is nil")
 	p.outputs = append(p.outputs, v)
+}
+
+func (p *Pipeline) newDeliverFunc(ctx context.Context) DeliverFunc {
+	return func(event Event) (rerr error) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				if re, ok := rec.(error); ok {
+					rerr = re
+				} else {
+					rerr = fmt.Errorf("Pipeline "+p.Id+" crash: %s", rec)
+				}
+			}
+		}()
+		// Filter -> Transform -> Output
+		ferr := makeFilterChain(func(ctx context.Context, in Event) (perr error) {
+			if in == nil {
+				return nil
+			}
+			events := []Event{in}
+			for _, tf := range p.transformers {
+				events, perr = tf.DoTransform(ctx, events)
+				if perr != nil {
+					return perr
+				}
+				if len(events) == 0 {
+					return nil
+				}
+			}
+			for _, output := range p.outputs {
+				output.OnSend(ctx, events...)
+			}
+			return nil
+		}, p.filters)(ctx, event)
+		if ferr != nil {
+			return fmt.Errorf("Pipeline "+p.Id+" deliver error: %w", ferr)
+		}
+		return nil
+	}
+}
+
+func makeFilterChain(next FilterFunc, filters []Filter) FilterFunc {
+	for i := len(filters) - 1; i >= 0; i-- {
+		next = filters[i].DoFilter(next)
+	}
+	return next
 }
