@@ -60,7 +60,7 @@ type Output interface {
 }
 
 // FilterFunc 执行过滤原始消息的函数；
-type FilterFunc func(ctx context.Context, message Message) error
+type FilterFunc func(ctx context.Context, msg Message) error
 
 // Filter 原始消息过滤接口
 type Filter interface {

@@ -6,18 +6,22 @@ import (
 )
 
 type SingleRunner struct {
-	single *Pipeline
+	inputRef Input
+	pipeline *Pipeline
 }
 
-func NewSingleRunner() *SingleRunner {
-	return &SingleRunner{}
+func NewSingleRunner(input Input) *SingleRunner {
+	assert.MustNotNil(input, "Input is nil")
+	return &SingleRunner{
+		inputRef: input,
+	}
 }
 
 func (r *SingleRunner) SetPipeline(v *Pipeline) *SingleRunner {
-	assert.MustNotNil(v, "SingleRunner set a nil pipeline")
+	assert.MustNotNil(v, "Pipeline is nil")
 	return r
 }
 
 func (r *SingleRunner) Serve(ctx context.Context) error {
-	return r.single.input.OnRead(ctx, r.single.newDeliverFunc(ctx))
+	return r.inputRef.OnRead(ctx, r.pipeline.buildDeliverFunc(ctx))
 }

@@ -8,40 +8,46 @@ import (
 
 type Pipeline struct {
 	Id           string
-	input        Input
 	filters      []Filter
 	transformers []Transformer
 	outputs      []Output
+	build        bool
 }
 
-func NewPipeline(id string, input Input) *Pipeline {
+func NewPipeline(id string) *Pipeline {
 	assert.MustNotEmpty(id, "Pipeline id is empty")
-	assert.MustNotNil(input, "Pipeline "+id+" input is nil")
 	return &Pipeline{
 		Id:           id,
-		input:        input,
 		filters:      make([]Filter, 0, 4),
 		transformers: make([]Transformer, 0, 4),
 		outputs:      make([]Output, 0, 4),
+		build:        false,
 	}
 }
 
-func (p *Pipeline) AddFilter(v Filter) {
+func (p *Pipeline) AddFilter(v Filter) *Pipeline {
+	assert.MustFalse(p.build, "Pipeline already in used")
 	assert.MustNotNil(v, "Filter is nil")
 	p.filters = append(p.filters, v)
+	return p
 }
 
-func (p *Pipeline) AddTransformer(v Transformer) {
+func (p *Pipeline) AddTransformer(v Transformer) *Pipeline {
+	assert.MustFalse(p.build, "Pipeline already in used")
 	assert.MustNotNil(v, "Transformer is nil")
 	p.transformers = append(p.transformers, v)
+	return p
 }
 
-func (p *Pipeline) AddOutput(v Output) {
+func (p *Pipeline) AddOutput(v Output) *Pipeline {
+	assert.MustFalse(p.build, "Pipeline already in used")
 	assert.MustNotNil(v, "Output is nil")
 	p.outputs = append(p.outputs, v)
+	return p
 }
 
-func (p *Pipeline) newDeliverFunc(ctx context.Context) DeliverFunc {
+func (p *Pipeline) buildDeliverFunc(ctx context.Context) DeliverFunc {
+	p.build = true
 	return func(msg Message) (rerr error) {
 		defer func() {
 			if rec := recover(); rec != nil {
