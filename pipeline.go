@@ -42,7 +42,7 @@ func (p *Pipeline) AddOutput(v Output) {
 }
 
 func (p *Pipeline) newDeliverFunc(ctx context.Context) DeliverFunc {
-	return func(event Event) (rerr error) {
+	return func(msg Message) (rerr error) {
 		defer func() {
 			if rec := recover(); rec != nil {
 				if re, ok := rec.(error); ok {
@@ -53,25 +53,25 @@ func (p *Pipeline) newDeliverFunc(ctx context.Context) DeliverFunc {
 			}
 		}()
 		// Filter -> Transform -> Output
-		ferr := makeFilterChain(func(ctx context.Context, in Event) (perr error) {
+		ferr := makeFilterChain(func(ctx context.Context, in Message) (perr error) {
 			if in == nil {
 				return nil
 			}
-			events := []Event{in}
+			messages := []Message{in}
 			for _, tf := range p.transformers {
-				events, perr = tf.DoTransform(ctx, events)
+				messages, perr = tf.DoTransform(ctx, messages)
 				if perr != nil {
 					return perr
 				}
-				if len(events) == 0 {
+				if len(messages) == 0 {
 					return nil
 				}
 			}
 			for _, output := range p.outputs {
-				output.OnSend(ctx, events...)
+				output.OnSend(ctx, messages...)
 			}
 			return nil
-		}, p.filters)(ctx, event)
+		}, p.filters)(ctx, msg)
 		if ferr != nil {
 			return fmt.Errorf("Pipeline "+p.Id+" deliver error: %w", ferr)
 		}

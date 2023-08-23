@@ -1,18 +1,18 @@
 package flow
 
-func SetKindNameValues(values KindNameValues) {
-	KindNameMapper = values
+func SetKindNameMapper(mapper KindNameMapper) {
+	_kindNameMapper = mapper
 }
 
-type KindNameValues map[Kind]string
+type KindNameMapper map[Kind]string
 
-func (m KindNameValues) GetName(k Kind) string {
+func (m KindNameMapper) GetName(k Kind) string {
 	if v, ok := m[k]; ok {
 		return v
 	}
 	return "undefined"
 }
 
-func (m KindNameValues) SetName(k Kind, name string) {
+func (m KindNameMapper) SetName(k Kind, name string) {
 	m[k] = name
 }

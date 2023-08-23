@@ -13,8 +13,8 @@ func NewSingleRunner() *SingleRunner {
 	return &SingleRunner{}
 }
 
-func (r *SingleRunner) SetPipeline(pipeline *Pipeline) *SingleRunner {
-	assert.MustNotNil(pipeline, "SingleRunner set a nil pipeline")
+func (r *SingleRunner) SetPipeline(v *Pipeline) *SingleRunner {
+	assert.MustNotNil(v, "SingleRunner set a nil pipeline")
 	return r
 }
 

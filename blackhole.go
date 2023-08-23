@@ -15,6 +15,6 @@ func NewBlackHoleOutput() Output {
 	return &BlackHoleOutput{}
 }
 
-func (b *BlackHoleOutput) OnSend(ctx context.Context, events ...Event) {
+func (b *BlackHoleOutput) OnSend(ctx context.Context, messages ...Message) {
 	// nop
 }
