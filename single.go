@@ -19,6 +19,7 @@ func NewSingleRunner(input Input) *SingleRunner {
 
 func (r *SingleRunner) SetPipeline(v *Pipeline) *SingleRunner {
 	assert.MustNotNil(v, "Pipeline is nil")
+	r.pipeline = v
 	return r
 }
 
