@@ -71,3 +71,8 @@ type Filter interface {
 type Transformer interface {
 	DoTransform(ctx context.Context, in []Message) (out []Message, err error)
 }
+
+// Router 处理消息输出路由
+type Router interface {
+	DoRoute(ctx context.Context, in Message, selectables []Output) (selection []Output)
+}

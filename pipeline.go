@@ -11,6 +11,7 @@ type Pipeline struct {
 	filters      []Filter
 	transformers []Transformer
 	outputs      []Output
+	router       Router
 	build        bool
 }
 
@@ -46,6 +47,13 @@ func (p *Pipeline) AddOutput(v Output) *Pipeline {
 	return p
 }
 
+func (p *Pipeline) SetRouter(v Router) *Pipeline {
+	assert.MustFalse(p.build, "Pipeline already in used")
+	assert.MustNotNil(v, "Router is nil")
+	p.router = v
+	return p
+}
+
 func (p *Pipeline) buildDeliverFunc(ctx context.Context) DeliverFunc {
 	p.build = true
 	return func(msg Message) (rerr error) {
@@ -58,7 +66,7 @@ func (p *Pipeline) buildDeliverFunc(ctx context.Context) DeliverFunc {
 				}
 			}
 		}()
-		// Filter -> Transform -> Output
+		// [Filters] -> [Transformers] -> [Router] -> Output
 		ferr := makeFilterChain(func(ctx context.Context, in Message) (perr error) {
 			if in == nil {
 				return nil
@@ -73,8 +81,18 @@ func (p *Pipeline) buildDeliverFunc(ctx context.Context) DeliverFunc {
 					return nil
 				}
 			}
-			for _, output := range p.outputs {
-				output.OnSend(ctx, messages...)
+			if p.router != nil {
+				// Route message
+				for _, msg := range messages {
+					for _, output := range p.router.DoRoute(ctx, msg, p.outputs) {
+						output.OnSend(ctx, msg)
+					}
+				}
+			} else {
+				// Send direct
+				for _, output := range p.outputs {
+					output.OnSend(ctx, messages...)
+				}
 			}
 			return nil
 		}, p.filters)(ctx, msg)
